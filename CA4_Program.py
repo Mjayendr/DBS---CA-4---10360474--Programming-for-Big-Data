@@ -79,15 +79,18 @@ class Process_Commit(object):
         for commit in commits:
             my_file.write(str(commit))
         my_file.close()
-        
+    
+    # Create functions to get total number of modifications done in the dataset.  
     def get_total_modification(self, commits):
         Total_Modifications = reduce(lambda x,y : x + y, (len(commit.m_paths) for commit in commits))
         return Total_Modifications
     
+    # Create functions to get total number of amendments done in the dataset. 
     def get_total_amendments(self, commits):
         Total_Amendments = reduce(lambda x,y : x + y, (len(commit.a_paths) for commit in commits))
         return Total_Amendments
-
+    
+    # Create functions to get total number of deletions done in the dataset. 
     def get_total_deletions(self, commits):
         Total_Deletions = reduce(lambda x,y : x + y, (len(commit.d_paths) for commit in commits))
         return Total_Deletions
@@ -100,6 +103,7 @@ class Process_Commit(object):
                 author_commits.append(commit)
         return author_commits
 
+    # Create function to get total number of authors in the data set
     def get_total_no_of_authors(self, commits):
         authors = []
         for commit in commits:
@@ -114,13 +118,13 @@ if __name__ == '__main__':
     process = Process_Commit()
     changes_file = 'CA-4.txt'
     data = process.read_file(changes_file)
-    print len(data)
+    print len(data) #   gets length of dataset
     commits = process.get_commits(data)
-    print len(commits)
-    print commits[421]
+    print len(commits) #total number of commits in the data
+    print commits[421]  # print commit with index 421
     print commits[0]
-    print len(commits[0].a_paths)
-    print 'Total Modifications = ' + str(process.get_total_modification(commits))
+    print len(commits[0].a_paths)   # print total number of added paths in commit with index 0.
+    print 'Total Modifications = ' + str(process.get_total_modification(commits)) # printing total number of modifications
     thomas_commits = process.get_commits_author(commits, 'Thomas')
     thomas_modification = process.get_total_modification(thomas_commits)
     
@@ -128,9 +132,8 @@ if __name__ == '__main__':
     process.save_commits(commits, 'changes.csv')
 #-------------------------------------------------------------------------------------------------------------------    
 #Statistical teting for analysis of the data set.
-    #Calculating total number of Modifications done in the data set.
- # counting number of authors  who contributed in changing paths in the data set.
     
+ # counting number of authors  who contributed in changing paths in the data set.
     authors = []
     for commit in commits:
         author = commit.author

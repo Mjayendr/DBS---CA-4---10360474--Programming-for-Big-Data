@@ -9,7 +9,7 @@ from CA4_Program import Process_Commit
 
 class TestCommits(unittest.TestCase):
     
-         
+     # create objects for the classed   
     def setUp(self):
         self.process = Process_Commit()
         self.data = self.process.read_file('CA-4.txt')
@@ -20,12 +20,15 @@ class TestCommits(unittest.TestCase):
     def test_number_of_lines(self):
         self.assertEqual(5255, len(self.data))
     
+    # testing for total number of modifications
     def test_total_modification(self):
         self.assertEqual(1186, self.process.get_total_modification(self.commits))
     
+    #testing for total number of amendments
     def test_total_amendments(self):
         self.assertEqual(1056, self.process.get_total_amendments(self.commits))
         
+    # test for total number of deletions
     def test_total_deletions(self):
         self.assertEqual(767, self.process.get_total_deletions(self.commits))
 
@@ -48,10 +51,11 @@ class TestCommits(unittest.TestCase):
         self.assertEqual(['M /cloud/personal/client-international/android/branches/android-15.2-solutions/libs/model/src/com/biscay/client/android/model/util/sync/dv/SyncAdapter.java'],
                 self.commits[20].changed_path)
     
+    # test for number of commits by Thomas
     def test_no_of_commits_by_Thomas(self):
         self.assertEqual(191, len(self.process.get_commits_author(self.commits, 'Thomas')))
         
-        
+    # test for total number of authors in the dataset.    
     def test_total_number_of_authors(self):
         self.assertEqual(10, len(self.process.get_total_no_of_authors(self.commits)))
         
