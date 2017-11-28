@@ -33,81 +33,104 @@ class Commit(object):
                 str(len(self.m_paths)) + ',' + str(len(self.a_paths)) + ',' + str(len(self.d_paths)) + ',' + str(self.number_of_lines) + \
             ',' + ' '.join(self.comment) + '\n'
 
-    # creating function to get commits as an array
-def get_commits(data):
-    sep = 72*'-'    # setting marker between two commits
-    commits = []    # initiating 'commits' array
-    index = 0
-    while index < len(data):
-        try:
-            # parse each of the commits and put them into a list of commits
-            details = data[index + 1].split('|')
-            # the author with spaces at end removed.
-            commit = Commit(details[0].strip(),
-                details[1].strip(),
-                details[2].strip().split()[0],
-                details[2].strip().split()[1],
-                int(details[3].strip().split()[0])) # extract the digit to find no. of lines in comments
-            change_file_end_index = data.index('', index + 1)   # finding new index at next empty space
-            commit.changed_path = data[index + 3 : change_file_end_index] # find the array for total number of changed paths
-           
-            # find the total number of added, deleted and modified lines in a commit
-            commit.m_paths = filter(lambda x:x == 'M', (line.split()[0] for line in commit.changed_path))
-            commit.a_paths = filter(lambda x:x == 'A', (line.split()[0] for line in commit.changed_path))
-            commit.d_paths = filter(lambda x:x == 'D', (line.split()[0] for line in commit.changed_path))
-            commit.comment = data[change_file_end_index + 1 : 
-                    change_file_end_index + 1 + commit.number_of_lines]
-            # add details to the list of commits.
-            commits.append(commit)
-            index = data.index(sep, index + 1)
-            
-        except IndexError:
-            index = len(data)
-    return commits
+# creating function to get commits as an array
+class Process_Commit(object):
 
-# create read file function and strip the white spaces from the lines
-def read_file(any_file):
-    # use strip to strip out spaces and trim the line.
-    return [line.strip() for line in open(any_file, 'r')]
+    def get_commits(self, data):
+        sep = 72*'-'    # setting marker between two commits
+        commits = []    # initiating 'commits' array
+        index = 0
+        while index < len(data):
+            try:
+                # parse each of the commits and put them into a list of commits
+                details = data[index + 1].split('|')
+                # the author with spaces at end removed.
+                commit = Commit(details[0].strip(),
+                    details[1].strip(),
+                    details[2].strip().split()[0],
+                    details[2].strip().split()[1],
+                    int(details[3].strip().split()[0])) # extract the digit to find no. of lines in comments
+                change_file_end_index = data.index('', index + 1)   # finding new index at next empty space
+                commit.changed_path = data[index + 3 : change_file_end_index] # find the array for total number of changed paths
+               
+                # find the total number of added, deleted and modified lines in a commit
+                commit.m_paths = filter(lambda x:x == 'M', (line.split()[0] for line in commit.changed_path))
+                commit.a_paths = filter(lambda x:x == 'A', (line.split()[0] for line in commit.changed_path))
+                commit.d_paths = filter(lambda x:x == 'D', (line.split()[0] for line in commit.changed_path))
+                commit.comment = data[change_file_end_index + 1 : 
+                        change_file_end_index + 1 + commit.number_of_lines]
+                # add details to the list of commits.
+                commits.append(commit)
+                index = data.index(sep, index + 1)
+                
+            except IndexError:
+                index = len(data)
+        return commits
+    
+    # create read file function and strip the white spaces from the lines
+    def read_file(self, any_file):
+        # use strip to strip out spaces and trim the line.
+        return [line.strip() for line in open(any_file, 'r')]
+    
+    # create function to save commits and write the headings for an outfile
+    def save_commits(self, commits, any_file):
+        my_file = open(any_file, 'w')
+        my_file.write("Revision,Author,Date,Time,Total_M,Total_A,Total_D, No.Of Lines, Comment\n")
+        for commit in commits:
+            my_file.write(str(commit))
+        my_file.close()
+        
+    def get_total_modification(self, commits):
+        Total_Modifications = reduce(lambda x,y : x + y, (len(commit.m_paths) for commit in commits))
+        return Total_Modifications
+    
+    def get_total_amendments(self, commits):
+        Total_Amendments = reduce(lambda x,y : x + y, (len(commit.a_paths) for commit in commits))
+        return Total_Amendments
 
-# create function to save commits and write the headings for an outfile
-def save_commits(commits, any_file):
-    my_file = open(any_file, 'w')
-    my_file.write("Revision,Author,Date,Time,Total_M,Total_A,Total_D, No.Of Lines, Comment\n")
-    for commit in commits:
-        my_file.write(str(commit))
-    my_file.close()
+    def get_total_deletions(self, commits):
+        Total_Deletions = reduce(lambda x,y : x + y, (len(commit.d_paths) for commit in commits))
+        return Total_Deletions
+        
+    # creating function to count number of commits by author
+    def get_commits_author(self, commits, author):
+        author_commits = []
+        for commit in commits:
+            if commit.author == author:
+                author_commits.append(commit)
+        return author_commits
 
+    def get_total_no_of_authors(self, commits):
+        authors = []
+        for commit in commits:
+            author = commit.author
+            if author not in authors:
+                authors.append(author)
+        return authors
+        
 # write main function for data transformation
 if __name__ == '__main__':
     # open the file - and read all of the lines.
+    process = Process_Commit()
     changes_file = 'CA-4.txt'
-    data = read_file(changes_file)
+    data = process.read_file(changes_file)
     print len(data)
-    commits = get_commits(data)
+    commits = process.get_commits(data)
     print len(commits)
     print commits[421]
     print commits[0]
     print len(commits[0].a_paths)
+    print 'Total Modifications = ' + str(process.get_total_modification(commits))
+    thomas_commits = process.get_commits_author(commits, 'Thomas')
+    thomas_modification = process.get_total_modification(thomas_commits)
     
     # Save file as .csv
-    save_commits(commits, 'changes.csv')
+    process.save_commits(commits, 'changes.csv')
 #-------------------------------------------------------------------------------------------------------------------    
 #Statistical teting for analysis of the data set.
     #Calculating total number of Modifications done in the data set.
-    Total_Modifications = str(reduce(lambda x,y : x + y, (len(commit.m_paths) for commit in commits)))
-    print 'Total Modifications = ', Total_Modifications
+ # counting number of authors  who contributed in changing paths in the data set.
     
-    # Calculating total number of Amendments in the dataset.
-    Total_Amendments = str(reduce(lambda x,y : x + y, (len(commit.a_paths) for commit in commits)))
-    print 'Total Amendments = ', Total_Amendments
-    
-    # Calculating total numbe of deletiona done in the dataset.
-    Total_Deletions = str(reduce(lambda x,y : x + y, (len(commit.d_paths) for commit in commits)))
-    print 'Total Deletions = ', Total_Deletions
-    
-
-    # counting number of authors  who contributed in changing paths in the data set.
     authors = []
     for commit in commits:
         author = commit.author
@@ -139,8 +162,11 @@ if __name__ == '__main__':
     Jimmy_Amendments = str(reduce(lambda x,y : x + y, (len(commit.a_paths) for commit in Jimmy_commits)))
     print 'Total Amendments done by Jimmy = ', Jimmy_Amendments
     
-
     
+    
+    
+    
+        
 
  
             
